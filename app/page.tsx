@@ -1,103 +1,113 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
+
+export default function LandingPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      router.replace("/dashboard");
+    }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return <p className="p-4 text-center">Loading...</p>;
+  }
+
+  // Base arrays for each column
+  const baseLogosCol1 = [
+    "/team-logos/krakentsp.png",
+    "/team-logos/blazerstsp.png",
+    "/team-logos/guardianstsp.png",
+    "/team-logos/freeriderstsp.png",
+  ];
+
+  const baseLogosCol2 = [
+    "/team-logos/marauderstsp.png",
+    "/team-logos/cyborgstsp.png",
+    "/team-logos/bulwarktsp.png",
+    "/team-logos/navigatorstsp.png",
+  ];
+
+  // Repeat each list 5×
+  const logosCol1 = Array.from({ length: 10 }, () => baseLogosCol1).flat();
+  const logosCol2 = Array.from({ length: 10 }, () => baseLogosCol2).flat();
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="flex flex-col items-center justify-between min-h-screen text-center bg-black">
+      {/* Top Section: Title */}
+      <div className="relative z-10 flex flex-col items-center gap-4 pt-16 pb-8 bg-black w-full">
+        <h1 className="relative text-5xl md:text-7xl font-extrabold tracking-wide text-pink-500">
+          POLIT
+          <span className="relative inline-block">
+            <span className="relative text-pink-500 z-0">ICS</span>
+            {/* eams overlay */}
+            <span
+              className="absolute text-cyan-400 font-handwriting z-30 inset-0 flex items-center justify-center"
+              style={{
+                transform: "rotate(-5deg) translate(28%, -18%)",
+                fontSize: "inherit",
+              }}
+            >
+              eams
+            </span>
+          </span>
+        </h1>
+        <p className="uppercase text-lg md:text-2xl text-cyan-400 font-semibold">
+          Tell us what you really think
+        </p>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Middle Section: Scrolling Columns */}
+      <div className="relative w-full flex-1 flex justify-center items-center gap-6 bg-black">
+        {/* Column 1 */}
+        <div className="overflow-hidden h-[408px] w-[120px] relative">
+          <div className="animate-scroll-up-slow flex flex-col gap-6">
+            {[...logosCol1, ...logosCol1].map((logo, idx) => (
+              <img
+                key={`col1-${idx}`}
+                src={logo}
+                alt={`Left team logo ${idx}`}
+                className="w-full h-[120px] object-contain"
+              />
+            ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        {/* Column 2 */}
+        <div className="overflow-hidden h-[408px] w-[120px] relative">
+          <div className="animate-scroll-down-slow flex flex-col gap-6">
+            {[...logosCol2, ...logosCol2].map((logo, idx) => (
+              <img
+                key={`col2-${idx}`}
+                src={logo}
+                alt={`Right team logo ${idx}`}
+                className="w-full h-[120px] object-contain"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section: Buttons */}
+      <div className="relative z-10 flex flex-col sm:flex-row gap-6 pb-16 bg-black w-full justify-center items-center">
+        <button
+          onClick={() => router.push("/auth/signup")}
+          className="w-[200px] px-8 py-3 border-2 border-pink-500 text-pink-500 text-lg font-bold uppercase rounded hover:bg-pink-500 hover:text-black transition-all shadow-[0_0_15px_rgba(236,72,153,0.8)]"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Sign Up
+        </button>
+        <button
+          onClick={() => signIn()}
+          className="w-[200px] px-8 py-3 border-2 border-cyan-400 text-cyan-400 text-lg font-bold uppercase rounded hover:bg-cyan-400 hover:text-black transition-all shadow-[0_0_15px_rgba(34,211,238,0.8)]"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Sign In
+        </button>
+      </div>
+    </main>
   );
 }
