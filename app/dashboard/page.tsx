@@ -12,6 +12,7 @@ import PreviousPolls from "components/PreviousPolls";
 import LeaderboardSection from "components/LeaderboardSection";
 import BadgeSection from "components/BadgeSection";
 import GlowCard from "components/GlowCard";
+import HeaderBar from "@/components/HeaderBar";
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession();
