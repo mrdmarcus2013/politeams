@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
+  // The component that *uses* useSearchParams must be inside Suspense
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center text-white">Loading…</div>}>
+      <AuthInner />
+    </Suspense>
+  );
+}
+
+function AuthInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -43,10 +52,7 @@ export default function AuthPage() {
             {/* eams overlay */}
             <span
               className="absolute text-cyan-400 font-handwriting z-30 inset-0 flex items-center justify-center"
-              style={{
-                transform: "rotate(-5deg) translate(28%, -18%)",
-                fontSize: "inherit",
-              }}
+              style={{ transform: "rotate(-5deg) translate(28%, -18%)", fontSize: "inherit" }}
             >
               eams
             </span>

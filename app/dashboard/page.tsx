@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
+import DiscussionSection from "@/components/DiscussionSection";
 import { teamMeta } from "../utils/teamMeta";
 import TeamWrapper from "components/TeamWrapper";
 import TodayPoll from "components/TodayPoll";
@@ -106,6 +106,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-6 p-4 max-w-3xl w-full mx-auto">
           <TodayPoll />
           <YesterdayPoll />
+          <DiscussionSection /> 
           <PreviousPolls />
 
           {/* Leaderboards in GlowCard */}

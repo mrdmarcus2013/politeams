@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+// ✅ Minimal DTOs for what this page needs
+type VoteDTO = { id: string };
+type OptionDTO = { id: string; text: string; votes: VoteDTO[] };
+type PollDTO = { id: string; question: string; options: OptionDTO[] };
+
 export default function ManagePollsPage() {
-  const [polls, setPolls] = useState<any[]>([]);
+  const [polls, setPolls] = useState<PollDTO[]>([]);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
 
@@ -11,17 +16,24 @@ export default function ManagePollsPage() {
   useEffect(() => {
     fetch("/api/admin/polls")
       .then((res) => res.json())
-      .then(setPolls);
+      .then((data) => {
+        // Handle either array or { polls: [...] }
+        const parsed: PollDTO[] = Array.isArray(data) ? data : (data?.polls ?? []);
+        setPolls(parsed);
+      })
+      .catch(() => setPolls([]));
   }, []);
 
   // Add a new option input
-  const addOption = () => setOptions([...options, ""]);
+  const addOption = () => setOptions((prev) => [...prev, ""]);
 
   // Update option text
   const updateOption = (index: number, value: string) => {
-    const newOptions = [...options];
-    newOptions[index] = value;
-    setOptions(newOptions);
+    setOptions((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
   };
 
   // Submit new poll
@@ -40,8 +52,9 @@ export default function ManagePollsPage() {
 
     setQuestion("");
     setOptions(["", ""]);
+
     const updated = await fetch("/api/admin/polls").then((res) => res.json());
-    setPolls(updated);
+    setPolls(Array.isArray(updated) ? updated : (updated?.polls ?? []));
   };
 
   return (
@@ -70,17 +83,11 @@ export default function ManagePollsPage() {
           />
         ))}
 
-        <button
-          onClick={addOption}
-          className="bg-gray-200 px-4 py-2 rounded mb-2"
-        >
+        <button onClick={addOption} className="bg-gray-200 px-4 py-2 rounded mb-2">
           + Add Option
         </button>
 
-        <button
-          onClick={createPoll}
-          className="bg-blue-600 text-white px-4 py-2 rounded ml-2"
-        >
+        <button onClick={createPoll} className="bg-blue-600 text-white px-4 py-2 rounded ml-2">
           Create Poll
         </button>
       </div>
@@ -88,14 +95,20 @@ export default function ManagePollsPage() {
       {/* Poll List */}
       <h2 className="text-xl font-semibold mb-2">Existing Polls</h2>
       <ul className="space-y-4">
-        {polls.map((poll) => (
-          <li key={poll.id} className="border p-4 rounded bg-white">
-            <div className="font-bold">{poll.question}</div>
-            <div className="text-sm text-gray-600">
-              {poll.options.length} options • {poll.options.reduce((sum, o) => sum + o.votes.length, 0)} votes
-            </div>
-          </li>
-        ))}
+        {polls.map((poll) => {
+          const totalVotes = poll.options.reduce(
+            (sum: number, o: OptionDTO) => sum + (o.votes?.length ?? 0),
+            0
+          );
+          return (
+            <li key={poll.id} className="border p-4 rounded bg-white">
+              <div className="font-bold">{poll.question}</div>
+              <div className="text-sm text-gray-600">
+                {poll.options.length} options • {totalVotes} votes
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </main>
   );

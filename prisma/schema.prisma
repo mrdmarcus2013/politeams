@@ -42,9 +42,12 @@ model User {
   totalVotes        Int                @default(0) // lifetime votes
   lastVotedDate     DateTime? // date of last vote
 
-  accounts Account[]
-  sessions Session[]
-  votes    Vote[]
+  accounts  Account[]
+  sessions  Session[]
+  votes     Vote[]
+  threads   Thread[] // Thread.createdBy
+  comments  Comment[] // Comment.user
+  reactions Reaction[] // Reaction.user
 }
 
 model Rank {
@@ -110,6 +113,8 @@ model Poll {
   closedAt  DateTime? // When poll is closed & results are revealed
   options   Option[]
 
+  threads Thread[] // Thread.poll
+
   @@index([startDate])
   @@index([endDate])
 }
@@ -156,4 +161,73 @@ model UserBadge {
 
   @@unique([userId, badgeId])
   @@index([userId, earnedAt])
+}
+
+// ─────────── Comments / Threads MVP ───────────
+
+enum ThreadType {
+  POLL // per-poll discussion (link via pollId)
+  TOPIC // user-created subject
+  FEEDBACK // app feedback
+}
+
+model Thread {
+  id          String     @id @default(cuid())
+  type        ThreadType
+  title       String
+  pollId      String?
+  createdById String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // denormalized for sorting
+  commentCount Int @default(0)
+  likeCount    Int @default(0)
+
+  createdBy User      @relation(fields: [createdById], references: [id])
+  poll      Poll?     @relation(fields: [pollId], references: [id])
+  comments  Comment[]
+
+  @@index([type, createdAt])
+  @@index([pollId])
+}
+
+model Comment {
+  id          String    @id @default(cuid())
+  threadId    String
+  parentId    String?
+  userId      String
+  content     String
+  isAnonymous Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // denormalized for sorting
+  replyCount Int @default(0)
+  likeCount  Int @default(0)
+
+  thread    Thread     @relation(fields: [threadId], references: [id])
+  parent    Comment?   @relation("CommentChildren", fields: [parentId], references: [id])
+  children  Comment[]  @relation("CommentChildren")
+  user      User       @relation(fields: [userId], references: [id])
+  reactions Reaction[]
+
+  @@index([threadId, createdAt])
+  @@index([parentId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  kind      String   @default("like")
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, commentId, kind])
+  @@index([commentId])
 }

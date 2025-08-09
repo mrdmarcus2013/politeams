@@ -17,7 +17,7 @@ async function main() {
       { name: "Kelly", email: "kelly@example.com", password: "password123" },
       { name: "Larry", email: "larry@example.com", password: "password123" },
     ],
-    skipDuplicates: true,
+    
   });
   console.log("Seeded users.");
 }
