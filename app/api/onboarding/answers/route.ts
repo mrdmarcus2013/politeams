@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/app/lib/prisma";
 
+export const dynamic = "force-dynamic";
 
 /**
  * GET: Group answers by question, then by answer
  */
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   const session = await getServerSession(authOptions);
 
   // Optional: enforce ADMIN
@@ -27,8 +27,14 @@ export async function GET(req: Request) {
     },
   });
 
+  // Types for clarity
+  type AnswerCounts = {
+    totalVotes: number;
+    teamVotes: Record<string, number>;
+  };
+
   // Organize data: group by question → then by answer
-  const groupedByQuestion: Record<string, any> = {};
+  const groupedByQuestion: Record<string, Record<string, AnswerCounts>> = {};
 
   answers.forEach((ans) => {
     const { question, answer, user } = ans;
@@ -41,19 +47,19 @@ export async function GET(req: Request) {
     if (!groupedByQuestion[question][answer]) {
       groupedByQuestion[question][answer] = {
         totalVotes: 0,
-        teamVotes: {} as Record<string, number>,
+        teamVotes: {},
       };
     }
 
     // Increment counts
-    groupedByQuestion[question][answer].totalVotes++;
-    groupedByQuestion[question][answer].teamVotes[teamSlug] =
-      (groupedByQuestion[question][answer].teamVotes[teamSlug] || 0) + 1;
+    const bucket = groupedByQuestion[question][answer];
+    bucket.totalVotes++;
+    bucket.teamVotes[teamSlug] = (bucket.teamVotes[teamSlug] ?? 0) + 1;
   });
 
   // Transform into array structure sorted by total votes
-  const result = Object.entries(groupedByQuestion).map(([question, answers]) => {
-    const answersArray = Object.entries(answers).map(([answer, counts]) => ({
+  const result = Object.entries(groupedByQuestion).map(([question, answersObj]) => {
+    const answersArray = Object.entries(answersObj).map(([answer, counts]) => ({
       answer,
       totalVotes: counts.totalVotes,
       teamVotes: counts.teamVotes,
@@ -78,7 +84,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { question, answer, points } = await req.json();
+  const body = await req.json();
+  const question: string | undefined = body?.question;
+  const answer: string | undefined = body?.answer;
+  const pointsRaw = body?.points;
+  const points = Number.isFinite(pointsRaw) ? Number(pointsRaw) : 1;
 
   if (!question || !answer) {
     return NextResponse.json(
@@ -92,7 +102,7 @@ export async function POST(req: Request) {
       userId: session.user.id,
       question,
       answer,
-      points: points || 1,
+      points,
     },
   });
 

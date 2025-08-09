@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/app/lib/prisma";
 
-
 export async function GET(
-  req: Request,
-  { params }: { params: { teamId: string } }
+  _req: Request,
+  { params }: { params: Promise<{ teamId: string }> } // 👈 params is now a Promise
 ) {
-  const { teamId } = params;
+  const { teamId } = await params; // 👈 await params
+
   try {
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -21,6 +20,9 @@ export async function GET(
     return NextResponse.json(team);
   } catch (error) {
     console.error("❌ Error fetching team:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
