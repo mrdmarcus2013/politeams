@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import DiscussionSection from "@/components/DiscussionSection";
+import DiscussionSection from "@/components/discussion/DiscussionSection";
 import { teamMeta } from "../utils/teamMeta";
 import TeamWrapper from "components/TeamWrapper";
 import TodayPoll from "components/TodayPoll";
@@ -12,7 +12,7 @@ import PreviousPolls from "components/PreviousPolls";
 import LeaderboardSection from "components/LeaderboardSection";
 import BadgeSection from "components/BadgeSection";
 import GlowCard from "components/GlowCard";
-import HeaderBar from "@/components/HeaderBar";
+import HeaderBar from "components/HeaderBar";
 
 export default function DashboardPage() {
   const { data: session, status, update } = useSession();
@@ -107,7 +107,15 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-6 p-4 max-w-3xl w-full mx-auto">
           <TodayPoll />
           <YesterdayPoll />
-          <DiscussionSection /> 
+          
+          <GlowCard
+            title="Comments"
+            borderColor={teamInfo.colors.primary}
+            titleColor={teamInfo.colors.secondary}
+          >
+            <DiscussionSection />
+          </GlowCard>
+
           <PreviousPolls />
 
           {/* Leaderboards in GlowCard */}

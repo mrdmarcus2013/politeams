@@ -55,8 +55,23 @@ export default function TodayPoll() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit vote");
 
+      // Update local poll state
       setPoll(data.poll);
 
+      // ✅ Notify the rest of the app (e.g., Comments section) that Today’s poll was voted
+      //    DiscussionSection listens for this to unlock today’s discussion and refetch threads.
+      try {
+        const votedPollId = (data?.poll?.id ?? poll?.id) as string | undefined;
+        if (votedPollId) {
+          window.dispatchEvent(
+            new CustomEvent("poll:voted", { detail: { pollId: votedPollId } })
+          );
+        }
+      } catch {
+        // no-op if window/customEvent unavailable (SSR safety)
+      }
+
+      // Handle any badge awards
       const awarded: BadgeSummary[] = Array.isArray(data.newBadges)
         ? data.newBadges.map((b: any) =>
           typeof b === "string" ? { id: -1, name: b, description: "" } : b
@@ -67,7 +82,7 @@ export default function TodayPoll() {
         triggerConfetti();
         enqueueToasts(awarded);
 
-        // ✅ refresh the Badges section immediately
+        // refresh the Badges section immediately
         await mutate(
           "/api/badges",
           async () => {

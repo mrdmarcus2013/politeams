@@ -10,16 +10,21 @@ const VALID_TYPES: ThreadType[] = ["POLL", "TOPIC", "FEEDBACK"];
 const VALID_SORT = new Set(["newest", "popular", "title"]);
 
 /**
- * GET /api/threads?type=POLL|TOPIC|FEEDBACK&sort=newest|popular|title
+ * GET /api/threads?type=POLL|TOPIC|FEEDBACK&sort=newest|popular|title&pollId=xyz
  */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const typeRaw = searchParams.get("type");
     const sortRaw = searchParams.get("sort");
+    const pollId = searchParams.get("pollId");
 
     const where: Prisma.ThreadWhereInput = {};
     if (typeRaw && (VALID_TYPES as string[]).includes(typeRaw)) {
         where.type = typeRaw as ThreadType;
+    }
+    if (pollId) {
+        where.pollId = pollId;
+        where.type = "POLL"; // ensure it only returns poll threads for that poll
     }
 
     // Default: newest
